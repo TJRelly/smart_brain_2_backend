@@ -48,7 +48,7 @@ router.get("/:username", async function (req, res, next) {
  * Authorization required: admin or same-user-as-:username
  **/
 
-router.patch("/:id", async function (req, res, next) {
+router.patch("/:id", ensureCorrectUserOrAdmin, async function (req, res, next) {
     try {
         const validator = jsonschema.validate(req.body, userUpdateSchema);
         if (!validator.valid) {
