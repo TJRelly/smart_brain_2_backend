@@ -52,7 +52,8 @@ class User {
     static async authenticate(username, password) {
         // try to find the user first
         const result = await db.query(
-            `SELECT username,
+            `SELECT id,
+                    username,
                     password_hash AS password,
                     email,
                     is_admin AS "isAdmin"
@@ -96,7 +97,7 @@ class User {
 
     static async all() {
         const result = await db.query(
-            `SELECT username, email, entries FROM users`
+            `SELECT username, entries, created_at FROM users`
         );
         let users = result.rows;
         return users;
@@ -113,7 +114,7 @@ class User {
 
     static async get(username) {
         const result = await db.query(
-            `SELECT username, email, entries, created_at, last_login_at, is_admin
+            `SELECT id, username, email, entries, created_at, last_login_at, is_admin
                 FROM users
                 WHERE username = $1`,
             [username]
@@ -140,7 +141,7 @@ class User {
                 BCRYPT_WORK_FACTOR
             );
         }
-        
+
         const { setCols, values } = sqlForPartialUpdate(data, {
             password: "password_hash",
         });
