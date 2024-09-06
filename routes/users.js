@@ -53,11 +53,20 @@ router.patch("/:id", ensureCorrectUserOrAdmin, async function (req, res, next) {
         const validator = jsonschema.validate(req.body, userUpdateSchema);
         if (!validator.valid) {
             const errs = validator.errors.map((e) => e.stack);
+            errs.map((err) => {
+                console.log(err);
+                if (err.includes("email"))
+                    throw new BadRequestError("Please enter a valid email");
+                if (err.includes("password"))
+                    throw new BadRequestError("password must be at least 5 characters");
+            });
             throw new BadRequestError(errs);
         }
         const user = await User.update(req.params.id, req.body);
         return res.json({ user });
     } catch (err) {
+        if (err.code === "23505")
+            return next(new BadRequestError("username/email already exists"));
         return next(err);
     }
 });
