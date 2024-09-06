@@ -2,7 +2,7 @@ const express = require("express");
 const router = new express.Router();
 const fetch = require("node-fetch");
 
-const ExpressError = require("../expressError");
+const {ExpressError, BadRequestError} = require("../expressError");
 const User = require("../models/user");
 // read .env files and make environmental variables
 require("dotenv").config();
@@ -44,15 +44,27 @@ router.post("/imageurl", async function (req, res, next) {
         return requestOptions;
     };
 
-    await fetch(
-        `https://api.clarifai.com/v2/models/face-detection/outputs`,
-        returnClarifaiRequestOptions(imageUrl)
-    )
-        .then((response) => response.text())
-        .then((data) => {
-            res.json(data);
-        })
-        .catch((err) => res.status(400).json("unable to work with API"));
+    const handleClarifaiRequest = async (url, res) => {
+        try {
+            const response = await fetch(
+                `https://api.clarifai.com/v2/models/face-detection/outputs`,
+                returnClarifaiRequestOptions(url)
+            );
+            console.log(response.statusText)
+            // Check if the response is ok (status in the range 200-299)
+            if (response.statusText !== "OK") {
+                throw new BadRequestError("Input invalid")
+            }
+
+            const data = await response.text(); // Get the response data as text
+            res.json(data); // Send the data as JSON response
+        } catch (err) {
+            console.error(err);
+            res.status(400).json("unable to work with API");
+        }
+    };
+
+    await handleClarifaiRequest(imageUrl, res);
 });
 
 router.patch("/increment", async function (req, res, next) {
@@ -60,7 +72,7 @@ router.patch("/increment", async function (req, res, next) {
         const { id } = req.body;
         if (id) {
             const user = await User.incrementEntries(id);
-            return res.json(user);
+            return res.json({ user });
         } else throw new ExpressError("Invalid id", 400);
     } catch (err) {
         return next(err);

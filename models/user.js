@@ -151,8 +151,8 @@ class User {
         const querySql = `UPDATE users 
                           SET ${setCols} 
                           WHERE id = ${idVarIdx} 
-                          RETURNING username,
-                                    email`;
+                          RETURNING id, username,
+                                    email, created_at, entries, is_admin, last_login_at`;
 
         const result = await db.query(querySql, [...values, id]);
         const user = result.rows[0];
@@ -189,7 +189,7 @@ class User {
         );
 
         let user = result.rows[0];
-        console.log(user);
+      
         if (!user) {
             throw new ExpressError(`No such user at id: ${id}`, 404);
         }
