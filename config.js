@@ -12,7 +12,7 @@ const PORT = +process.env.PORT || 3000;
 function getDatabaseUri() {
     return process.env.NODE_ENV === "test"
         ? "psql:///smart_brain_2_test"
-        : process.env.DATABASE_URL || "psql:///smart_brain_2";
+        : process.env.DATABASE_URI || "psql:///smart_brain_2";
 }
 
 // Speed up bcrypt during tests, since the algorithm safety isn't being tested
