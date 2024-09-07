@@ -40,7 +40,7 @@ class User {
         const result = await db.query(
             `INSERT INTO users (username, password_hash, email)
              VALUES ($1, $2, $3)
-             RETURNING username, password_hash`,
+             RETURNING id, username, password_hash`,
             [username.toLowerCase(), hashedPassword, email]
         );
 
