@@ -8,7 +8,7 @@ const {
     UnauthorizedError,
     ExpressError,
 } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { sqlForPartialUpdate, checkForDuplicates } = require("../helpers/sql");
 
 /** User of the site. */
 
@@ -18,15 +18,17 @@ class User {
      */
 
     static async register({ username, password, email }) {
-        const duplicateCheck = await db.query(
-            `SELECT username
-             FROM users
-             WHERE username = $1`,
-            [username]
-        );
+        // Check for duplicate username and email
+        const usernameExists = await checkForDuplicates("username", username);
+        const emailExists = await checkForDuplicates("email", email);
 
-        if (duplicateCheck.rows[0]) {
+        // Respond with appropriate error messages
+        if (usernameExists) {
             throw new BadRequestError(`Duplicate username: ${username}`);
+        }
+
+        if (emailExists) {
+            throw new BadRequestError(`Duplicate email: ${email}`);
         }
 
         if (!username || !password) {
@@ -189,7 +191,7 @@ class User {
         );
 
         let user = result.rows[0];
-      
+
         if (!user) {
             throw new ExpressError(`No such user at id: ${id}`, 404);
         }

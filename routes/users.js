@@ -51,17 +51,24 @@ router.get("/:username", async function (req, res, next) {
 router.patch("/:id", ensureCorrectUserOrAdmin, async function (req, res, next) {
     try {
         const validator = jsonschema.validate(req.body, userUpdateSchema);
+
         if (!validator.valid) {
-            const errs = validator.errors.map((e) => e.stack);
+            const errs = validator.errors.map((e) =>
+                e.stack.replace("instance.", "")
+            );
+
             errs.map((err) => {
                 console.log(err);
                 if (err.includes("email"))
                     throw new BadRequestError("Please enter a valid email");
                 if (err.includes("password"))
-                    throw new BadRequestError("password must be at least 5 characters");
+                    throw new BadRequestError(
+                        "password must be at least 5 characters"
+                    );
             });
             throw new BadRequestError(errs);
         }
+
         const user = await User.update(req.params.id, req.body);
         return res.json({ user });
     } catch (err) {

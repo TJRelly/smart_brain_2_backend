@@ -1,4 +1,5 @@
 const { BadRequestError } = require("../expressError");
+const db = require("../db")
 
 /**
  * Helper for making selective update queries.
@@ -18,18 +19,30 @@ const { BadRequestError } = require("../expressError");
  */
 
 function sqlForPartialUpdate(dataToUpdate, jsToSql) {
-  const keys = Object.keys(dataToUpdate);
-  if (keys.length === 0) throw new BadRequestError("No data entered to update.");
-  
-  // {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
-  const cols = keys.map((colName, idx) =>
-      `"${jsToSql[colName] || colName}"=$${idx + 1}`,
-  );
+    const keys = Object.keys(dataToUpdate);
+    if (keys.length === 0)
+        throw new BadRequestError("No data entered to update.");
 
-  return {
-    setCols: cols.join(", "),
-    values: Object.values(dataToUpdate),
-  };
+    // {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
+    const cols = keys.map(
+        (colName, idx) => `"${jsToSql[colName] || colName}"=$${idx + 1}`
+    );
+
+    return {
+        setCols: cols.join(", "),
+        values: Object.values(dataToUpdate),
+    };
 }
 
-module.exports = { sqlForPartialUpdate };
+// checks for dulicates in database
+async function checkForDuplicates(field, value) {
+    const result = await db.query(
+        `SELECT ${field} 
+       FROM users 
+       WHERE ${field} = $1`,
+        [value]
+    );
+    return result.rows.length > 0; // Returns true if duplicates exist
+}
+
+module.exports = { sqlForPartialUpdate, checkForDuplicates };

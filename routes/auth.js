@@ -17,7 +17,9 @@ router.post("/login", async function (req, res, next) {
     try {
         const validator = jsonschema.validate(req.body, userAuthSchema);
         if (!validator.valid) {
-            const errs = validator.errors.map((e) => e.stack);
+            const errs = validator.errors.map((e) =>
+                e.stack.replace("instance.", "")
+            );
             throw new BadRequestError(errs);
         }
 
@@ -41,9 +43,12 @@ router.post("/login", async function (req, res, next) {
 router.post("/register", async function (req, res, next) {
     try {
         const validator = jsonschema.validate(req.body, userRegisterSchema);
-        
+
         if (!validator.valid) {
-            const errs = validator.errors.map((e) => e.stack);
+            const errs = validator.errors.map((e) =>
+                e.stack.replace("instance.", "")
+            );
+            console.log(errs);
             throw new BadRequestError(errs);
         }
 
